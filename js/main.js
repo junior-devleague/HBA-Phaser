@@ -46,6 +46,12 @@ function preload(){
 
     //Write the text
     game.load.image('font:numbers', 'images/numbers.png');
+
+    //Add the new animations for hero
+    game.load.image('hero', 'images/hero_stopped.png');
+
+    //load the new spritesheet into the hero key
+    game.load.spritesheet('hero', 'images/hero.png', 36, 42);
 };
 
 function create(){
@@ -88,6 +94,11 @@ function update(){
 	handleCollisions();
 	handleInput();
 	moveSpider();
+	var animationName = getAnimationName();
+	console.log(animationName);
+	if (hero.animations.name !== animationName) {
+        hero.animations.play(animationName);
+    }
 }
 
 function handleCollisions(){
@@ -160,6 +171,11 @@ function spawnCharacters(data){
 	hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
     hero.anchor.set(0.5, 0.5);
 
+    hero.animations.add('stop', [0]);
+    hero.animations.add('run', [1, 2], 8, true); // 8fps looped
+    hero.animations.add('jump', [3]);
+    hero.animations.add('fall', [4]);
+
     data.spiders.forEach(function (spider){
     	var sprite = game.add.sprite(spider.x, spider.y, 'spider');
     	spiders.add(sprite);
@@ -220,7 +236,13 @@ function die(spider){
 }
 
 function move(direction){
-	hero.x += direction * 2.5;
+	hero.body.velocity.x = direction * 200;
+	if (hero.body.velocity.x < 0) {
+        hero.scale.x = -1;
+    }
+    else if (hero.body.velocity.x > 0) {
+        hero.scale.x = 1;
+    }
 }
 
 function moveSpider(){
@@ -251,6 +273,24 @@ function onHeroVsCoin(hero, coin){
 	coinPickupCount++;
     sfxCoin.play();
 	coinFont.text = `x${coinPickupCount}`;
+}
+
+function getAnimationName(){
+
+	var name = 'stop';
+	// jumping
+	if (hero.body.velocity.y < 0) {
+        name = 'jump';
+    }
+    // falling
+    else if (hero.body.velocity.y >= 0 && !hero.body.touching.down) {
+        name = 'fall';
+    }
+    else if (hero.body.velocity.x !== 0 && hero.body.touching.down) {
+        name = 'run';
+    }
+
+    return name;
 }
 
 //Create a game state
