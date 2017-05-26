@@ -35,6 +35,9 @@ function preload(){
     game.load.spritesheet('coin', 'images/coin_animated.png', 22, 22);
 
     game.load.spritesheet('spider', 'images/spider.png', 42, 32);
+
+    //Add invisible "walls" so the spiders don't fall off platforms
+    game.load.image('invisible-wall', 'images/invisible_wall.png');
 };
 
 function create(){
@@ -59,12 +62,15 @@ function create(){
 function update(){
 	handleCollisions();
 	handleInput();
+	moveSpider();
 }
 
 function handleCollisions(){
 	game.physics.arcade.collide(hero, platforms);
 	game.physics.arcade.overlap(hero, coins, onHeroVsCoin,
         null, this);
+	game.physics.arcade.collide(spiders, platforms);
+	game.physics.arcade.collide(spiders, enemyWalls);
 }
 
 function handleInput(){
@@ -92,6 +98,10 @@ function loadLevel(data){
 	// create all the groups/layers that we need
 	platforms = game.add.group();
 
+	spiders = game.add.group();
+	enemyWalls = game.add.group();
+	enemyWalls.visible = false;
+
 	//Spawn the coins
 	coins = game.add.group();
 	// spawn all platforms
@@ -99,7 +109,7 @@ function loadLevel(data){
 	data.coins.forEach(spawnCoin, this);
 
 	// called the function to spawn hero and enemies
-	spawnCharacters({hero: data.hero});	
+	spawnCharacters({hero: data.hero, spiders: data.spiders});	
 
 	//Enable gravity
 	game.physics.arcade.gravity.y = 1200;
@@ -113,6 +123,9 @@ function spawnPlatform(platform){
 	game.physics.enable(sprite);
 	sprite.body.allowGravity = false;
 	sprite.body.immovable = true;
+
+	spawnEnemyWall(platform.x, platform.y, 'left');
+	spawnEnemyWall(platform.x + sprite.width, platform.y, 'right');
 }
 
 function spawnCharacters(data){
@@ -120,11 +133,32 @@ function spawnCharacters(data){
 	hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
     hero.anchor.set(0.5, 0.5);
 
+    data.spiders.forEach(function (spider){
+    	var sprite = game.add.sprite(spider.x, spider.y, 'spider');
+    	spiders.add(sprite);
+    	sprite.anchor.set(0.5);
+	    // animation
+	    sprite.animations.add('crawl', [0, 1, 2], 8, true);
+	    sprite.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
+	    sprite.animations.play('crawl');
+	    game.physics.enable(sprite);
+    	sprite.body.collideWorldBounds = true;
+    	sprite.body.velocity.x = 100;
+    })
+
     //Make the main character use the physics engine for movement
 	game.physics.enable(hero);
 
 	//Prevent the main character to get out of the screen
 	hero.body.collideWorldBounds = true;
+}
+
+function spawnEnemyWall(x, y, side){
+	var sprite = enemyWalls.create(x, y, 'invisible-wall');
+	sprite.anchor.set(side === 'left' ? 1 : 0, 1);
+	game.physics.enable(sprite);
+	sprite.body.immovable = true;
+	sprite.body.allowGravity = false;
 }
 
 function spawnCoin(coin) {
@@ -138,6 +172,16 @@ function spawnCoin(coin) {
 };
 
 function spawnSpider(){
+	spider = spiders.create(spider.x, spider.y, 'spider');
+	spider.anchor.set(0.5);
+	spider.animations.add('crawl', [0, 1, 2], 8, true);
+    spider.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
+    spider.animations.play('crawl');
+
+    // physic properties
+    game.physics.enable(spider);
+    spider.body.collideWorldBounds = true;
+    spider.body.velocity.x = Spider.speed;
 }
 
 function onHeroVsCoin(hero, coin) {
@@ -147,6 +191,18 @@ function onHeroVsCoin(hero, coin) {
 
 function move(direction){
 	hero.x += direction * 2.5;
+}
+
+function moveSpider(){
+	spiders.forEach(function (spider){
+		if (spider.body.touching.right || spider.body.blocked.right) {
+        	spider.body.velocity.x = -100; // turn left
+	    }
+	    else if (spider.body.touching.left || spider.body.blocked.left) {
+	        spider.body.velocity.x = 100; // turn right
+	    }
+
+	})
 }
 
 //Create a game state
