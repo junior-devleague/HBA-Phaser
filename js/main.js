@@ -4,6 +4,8 @@ var upKey;
 var speed = 200;
 var sfxJump;
 var coinPickupCount = 0;
+var hasKey = false;
+
 function init(){
 	//Make hero sprite more focused when moving around
 	game.renderer.renderSession.roundPixels = true;
@@ -52,6 +54,15 @@ function preload(){
 
     //load the new spritesheet into the hero key
     game.load.spritesheet('hero', 'images/hero.png', 36, 42);
+
+    //Create the door
+    game.load.spritesheet('door', 'images/door.png', 42, 66);
+
+    //Create the key
+    game.load.image('key', 'images/key.png');
+
+    game.load.audio('sfx:key', 'audio/key.wav');
+    game.load.audio('sfx:door', 'audio/door.wav');
 };
 
 function create(){
@@ -61,6 +72,8 @@ function create(){
 	sfxJump = game.add.audio('sfx:jump');
 	sfxCoin = game.add.audio('sfx:coin');
 	sfxStomp = game.add.audio('sfx:stomp');
+	sfxKey = game.add.audio('sfx:key');
+    sfxDoor = game.add.audio('sfx:door');
 
 	loadLevel(game.cache.getJSON('level:1'));
 
@@ -109,6 +122,13 @@ function handleCollisions(){
 	game.physics.arcade.collide(spiders, enemyWalls);
 	game.physics.arcade.overlap(hero, spiders,
         onHeroVsEnemy, null, this);
+	game.physics.arcade.overlap(hero, key, onHeroVsKey,
+        null, this)
+	game.physics.arcade.overlap(hero, door, onHeroVsDoor,
+        // ignore if there is no key or the player is on air
+        function (hero, door) {
+            return hasKey && hero.body.touching.down;
+        });
 }
 
 function handleInput(){
@@ -151,6 +171,10 @@ function loadLevel(data){
 
 	//Enable gravity
 	game.physics.arcade.gravity.y = 1200;
+
+	bgDecoration = game.add.group();
+	spawnDoor(data.door.x, data.door.y);
+	spawnKey(data.key.x, data.key.y);
 }
 
 function spawnPlatform(platform){
@@ -227,6 +251,20 @@ function spawnSpider(){
     spider.body.velocity.x = Spider.speed;
 }
 
+function spawnDoor(x, y){
+	door = bgDecoration.create(x, y, 'door');
+    door.anchor.setTo(0.5, 1);
+    game.physics.enable(door);
+    door.body.allowGravity = false;
+}
+
+function spawnKey(x, y){
+	key = bgDecoration.create(x, y, 'key');
+    key.anchor.set(0.5, 0.5);
+    game.physics.enable(key);
+    key.body.allowGravity = false;
+}
+
 function die(spider){
 	spider.body.enable = false;
 	spider.animations.play('die');
@@ -273,6 +311,17 @@ function onHeroVsCoin(hero, coin){
 	coinPickupCount++;
     sfxCoin.play();
 	coinFont.text = `x${coinPickupCount}`;
+}
+
+function onHeroVsKey(hero, key){
+	sfxKey.play();
+    key.kill();
+    hasKey = true;
+}
+
+function onHeroVsDoor(hero, door){
+	sfxDoor.play();
+    game.state.restart();
 }
 
 function getAnimationName(){
