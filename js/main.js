@@ -1,6 +1,13 @@
 var leftKey;
 var rightKey;
+var upKey;
 var speed = 200;
+var sfxJump;
+
+function init(){
+	//Make hero sprite more focused when moving around
+	game.renderer.renderSession.roundPixels = true;
+}
 
 function preload(){
 	//load and render an image
@@ -17,29 +24,79 @@ function preload(){
 
     //load the hero image
     game.load.image('hero', 'images/hero_stopped.png');
-};
 
-function init(){
-	//Make hero sprite more focused when moving around
-	game.renderer.renderSession.roundPixels = true;
-}
+    //Play a sound effect when jumping
+    game.load.audio('sfx:jump', 'audio/jump.wav');
+
+    //Load coin audio
+    game.load.audio('sfx:coin', 'audio/coin.wav');
+
+    //Load the spritesheet
+    game.load.spritesheet('coin', 'images/coin_animated.png', 22, 22);
+
+    game.load.spritesheet('spider', 'images/spider.png', 42, 32);
+};
 
 function create(){
 	// create game entities and set up world here
 	game.add.image(0, 0, 'background');
+
+	sfxJump = game.add.audio('sfx:jump')
+	sfxCoin = game.add.audio('sfx:coin')
 
 	loadLevel(game.cache.getJSON('level:1'));
 
 	//This sets the left and right keys as inputs for this game
 	leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
 	rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+	upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+
+	upKey.onDown.add(function(){
+		jump();
+	})
 }
 
+function update(){
+	handleCollisions();
+	handleInput();
+}
+
+function handleCollisions(){
+	game.physics.arcade.collide(hero, platforms);
+	game.physics.arcade.overlap(hero, coins, onHeroVsCoin,
+        null, this);
+}
+
+function handleInput(){
+	if (leftKey.isDown) { // move hero left
+        move(-1);
+    }
+    else if (rightKey.isDown) { // move hero right
+        move(1);
+    }
+    else {
+    	move(0);
+    }
+}
+
+function jump(){
+	var canJump = hero.body.touching.down;
+	//Ensures hero is on the ground or on a platform
+	if (canJump) {
+		hero.body.velocity.y = -600;
+		sfxJump.play();
+	}
+	return canJump;
+}
 function loadLevel(data){
 	// create all the groups/layers that we need
 	platforms = game.add.group();
+
+	//Spawn the coins
+	coins = game.add.group();
 	// spawn all platforms
 	data.platforms.forEach(spawnPlatform, this);
+	data.coins.forEach(spawnCoin, this);
 
 	// called the function to spawn hero and enemies
 	spawnCharacters({hero: data.hero});	
@@ -51,7 +108,8 @@ function loadLevel(data){
 function spawnPlatform(platform){
 	//add new platforms as sprites to the game world
 	game.add.sprite(platform.x, platform.y, platform.image);
-	var sprite = platforms.create(platform.x, platform.y, platform.image);
+	var sprite = platforms.create(
+        platform.x, platform.y, platform.image);
 	game.physics.enable(sprite);
 	sprite.body.allowGravity = false;
 	sprite.body.immovable = true;
@@ -69,28 +127,26 @@ function spawnCharacters(data){
 	hero.body.collideWorldBounds = true;
 }
 
+function spawnCoin(coin) {
+    var sprite = this.coins.create(coin.x, coin.y, 'coin');
+    sprite.anchor.set(0.5, 0.5);
+
+    sprite.animations.add('rotate', [0, 1, 2, 1], 6, true); // 6fps, looped
+    sprite.animations.play('rotate');
+    game.physics.enable(sprite);
+    sprite.body.allowGravity = false;
+};
+
+function spawnSpider(){
+}
+
+function onHeroVsCoin(hero, coin) {
+    coin.kill();
+    sfxCoin.play();
+};
+
 function move(direction){
 	hero.x += direction * 2.5;
-}
-function handleCollisions(){
-	game.physics.arcade.collide(hero, platforms);
-}
-
-function handleInput(){
-	if (leftKey.isDown) { // move hero left
-        move(-1);
-    }
-    else if (rightKey.isDown) { // move hero right
-        move(1);
-    }
-    else {
-    	move(0);
-    }
-}
-
-function update(){
-	handleCollisions();
-	handleInput();
 }
 
 //Create a game state
