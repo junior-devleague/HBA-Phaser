@@ -278,7 +278,6 @@ function loadLevel (data) {
 function spawnCharacters (data) {
     // spawn hero
     hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
-    hero.anchor.set(0.5, 0.5);
 };
 ```
 2. Check how it looks like. You should see the hero… not in a very good position:
