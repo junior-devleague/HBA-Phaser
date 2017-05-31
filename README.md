@@ -1071,3 +1071,106 @@ function onHeroVsEnemy(hero, enemy) {
 4. It should be working now!
 
 ![Spider dying animation](https://mozdevs.github.io/html5-games-workshop/assets/platformer/enemy_dying.gif)
+
+## Scoreboard
+
+In this step we are going to add a scoreboard that displays how many coins the main character has collected:
+
+![Coin scoreboard](https://mozdevs.github.io/html5-games-workshop/assets/platformer/coin_scoreboard.png)
+
+In order to do that, we need to be able to write text in the screen. In games, this can be done in different ways:
+
+- By using a regular TTF font, like Times New Roman (for HTML5 games this could be a Web Font)
+- By using a bitmap font, which is actually a spritesheet, and render the characters one by one like they were images.
+For the scoreboard we will use a bitmap font, which are called in Phaser *retro fonts*. The font will consist only of digits, a blank space and an x character. Here's the spritesheet:
+
+![Bitmap font spritesheet](https://mozdevs.github.io/html5-games-workshop/assets/platformer/bitmap_font_sheet.png)
+
+It's important to know that in order to render a text with a bitmap font, we need both an instance of Phaser.RetroFont and an instance of Phaser.Image. Why? The retro font holds the image data in memory (i.e. the pixel values of a rendered text), but then we need a Phaser entity that can make use of that image data, such as Phaser.Image (or even Phaser.Sprite)!
+
+### Tasks
+
+#### Keep track of how many coins have been collected
+
+1. We need to create a global variable coinPickupCount that will keep track of the coints
+
+var coinPickupCount = 0;
+
+function onHeroVsCoin(hero, coin){
+	coinPickupCount++;
+}
+
+#### Draw a coin icon on top of everything
+
+1. Load the image asset in preload:
+
+```html
+function preload() {
+    // ...
+    game.load.image('icon:coin', 'images/coin_icon.png');
+    // ...
+};
+```
+2. We will separate the creation of UI elements into a separate method. Inside it, we will create a new group to store all the UI icons, text, etc.
+
+```html
+function create() {
+    coinIcon = game.make.image(40, 0, 'icon:coin');
+
+    hud = game.add.group();
+    hud.add(coinIcon);
+    hud.position.set(10, 10);
+};
+```
+Note how all entities inside this.hud will get rendered relatively to it. This means that, since the hud is in position (10, 10), if we draw an image at –for instance– (5, 5), it will get rendered at position (15, 15) of the screen.
+
+3. Check that the coin icon is rendered at the top left of the screen:
+
+![HUD with coin icon](https://mozdevs.github.io/html5-games-workshop/assets/platformer/hud_icon_only.png)
+
+## Write the text
+
+1. Finally we get to the most interesting part! As usual, we need to load the asset that will make up the font. Note that, even though conceptually it is a spritesheet, in Phaser it needs to be loaded it with load.image:
+
+```html
+function preload() {
+    // ...
+    game.load.image('font:numbers', 'images/numbers.png');
+    // ...
+};
+```
+Now we need to instantiate Phaser.RetroFont, that will be able to compute how a text looks like with the bitmap font spritesheet.
+
+```html
+function create() {
+    // ...
+    var NUMBERS_STR = '0123456789X ';
+    coinFont = game.add.retroFont('font:numbers', 20, 26, NUMBERS_STR, 6);
+    // ...
+};
+```
+Since Phaser has no idea of the contents of the spritesheet, we need to tell it when creating the retro font: the width and height of each character and which characters are being included (the orden is important!)
+
+With the retro font created, we need to make use of it from a game entity. We will use a Phaser.Image for this:
+
+```html
+function create() {
+    // let coinIcon = ...
+    var coinScoreImg = game.make.image(100 + coinIcon.width, coinIcon.height / 2, coinFont);
+    coinScoreImg.anchor.set(1, 0.5);
+
+    // ...
+    hud.add(coinScoreImg);
+};
+```
+Last, we just need to tell the retro font which text string to render.
+
+```html
+function onHeroVsCoin(hero, coin){
+    // ...
+    coinFont.text = `x${this.coinPickupCount}`;
+};
+```
+Try it in the browser and see how the text changes with every coin collected!
+
+![Level with coin score board](https://mozdevs.github.io/html5-games-workshop/assets/platformer/level_coin_scoreboard.png)
