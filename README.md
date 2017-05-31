@@ -1174,3 +1174,324 @@ function onHeroVsCoin(hero, coin){
 Try it in the browser and see how the text changes with every coin collected!
 
 ![Level with coin score board](https://mozdevs.github.io/html5-games-workshop/assets/platformer/level_coin_scoreboard.png)
+
+## Animations for the main character
+
+Right now we have a few animated sprites in the game: the coins and the enemy spiders. But none for the main character! We are going to implement them now.
+
+This is the character's spritesheet and the animations in it:
+
+![Main character spritesheet](https://mozdevs.github.io/html5-games-workshop/assets/platformer/hero_spritesheet.png)
+
+- Stopped: frame #0
+- Running: frames #1 - #2
+- Jumping (upwards): frame #3
+- Falling: frame #4
+There's also a dying/hit animation in the spritesheet, but we will implement it in a later stage.
+
+As you can see, this can be a bit complex, so the approach that we will follow to handle animations for the main character is to check every frame which animation should be active and, if it's different, we'll play another one.
+
+### Tasks
+
+#### Add the new animations
+
+1. Previously we had hero_stopped.png assigned to the hero key, loaded as an image. We need to get rid of that, so delete this line in the preload:
+```html
+function preload () {
+    // delete this line below
+    game.load.image('hero', 'images/hero_stopped.png');
+};
+```
+2. Now we need to load the new spritesheet into the hero key:
+```html
+function preload() {
+    // ...
+    game.load.spritesheet('hero', 'images/hero.png', 36, 42);
+    // ...
+};
+```
+3. Add the new animations in the Hero constructor:
+```html
+function spawnCharacters(data){
+    // add hero sprite to game
+    hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
+    hero.anchor.set(0.5, 0.5);
+
+    hero.animations.add('stop', [0]);
+    hero.animations.add('run', [1, 2], 8, true); // 8fps looped
+    hero.animations.add('jump', [3]);
+    hero.animations.add('fall', [4]);
+}
+```
+4. Calculate which animation should be playing
+
+This is the new function that will return the name of the animation that should be playing:
+
+```html
+function getAnimationName(){
+    var name = 'stop';
+    // jumping
+    if (hero.body.velocity.y < 0) {
+        name = 'jump';
+    }
+    // falling
+    else if (hero.body.velocity.y >= 0 && !hero.body.touching.down) {
+        name = 'fall';
+    }
+    else if (hero.body.velocity.x !== 0 && hero.body.touching.down) {
+        name = 'run';
+    }
+    return name;
+}
+```
+Note how in the falling state we are both checking that the vertical velocity is positive (it goes downwards) and that the main character is not touching a platform. Why? Because when the character is on the ground it still has a vertical velocity caused by the gravity. The character doesn't fall because there is a body blocking them, not because their vertical velocity is zero.
+
+2. We will create an update method for Hero in which we will check which animation should be playing and switch to a new one if necessary. Remember that update methods in Phaser.Sprite instances get called automatically each frame!
+```html
+function update() {
+    var animationName = getAnimationName();
+    if (hero.animations.name !== animationName) {
+        hero.animations.play(animationName);
+    }
+}
+```
+3. Try it now in the browser! Run, jump around… You should be able to see all the animations in place. And a little glitch: the character does not face the right direction when moving left.
+
+![Animations… with a glitch!](https://mozdevs.github.io/html5-games-workshop/assets/platformer/hero_animation_glitch.gif)
+
+#### Make the character face the right direction
+
+1. It may sound weird, but usually in game development flipping (or mirroring) an image is achieved by applying a negative scale to the image. So applying a scale of -100% horizontally will flip the image of the character to face to the left.
+
+Add this to the move function, since we know the direction in that moment:
+
+```html
+function move(direction){
+	hero.body.velocity.x = direction * 200;
+	if (hero.body.velocity.x < 0) {
+        hero.scale.x = -1;
+    }
+    else if (hero.body.velocity.x > 0) {
+        hero.scale.x = 1;
+    }
+}
+```
+In Phaser scales are normalized, so 0.5 means 50%, 1 means 100% and so on.
+
+The final result is the main character facing the right direction when moving.
+
+![Main character, properly animated](https://mozdevs.github.io/html5-games-workshop/assets/platformer/hero_animations.gif)
+
+#### Checklist
+
+- The main character shows different animations or images for the following actions: not moving, running, jumping and falling.
+- The main character faces the correct direction when moving either left or right.
+
+## Win condition
+
+Currently the player can lose in the game –and they will have to start over again–, but there is no way for them to win.
+
+We are going to add two elements to the level: a door and a key. The goal of the game would be to fetch the key and then go back to the door and open it to advance to the next level. We will also add an icon next to the coin scoreboard to display whether the key has been picked up yet or not.
+
+In the JSON file there is already the data of where the door and the key should be placed.
+
+Here's how the whole thing will look like:
+
+![Level with the win condition elements](https://mozdevs.github.io/html5-games-workshop/assets/platformer/win_condition.png)
+
+### Tasks
+
+#### Create the door
+
+1. The door is a spritesheet (showing it closed and open):
+```html
+function preload() {
+    // ...
+    game.load.spritesheet('door', 'images/door.png', 42, 66);
+};
+```
+2. The door needs to appear below all the other sprites. We will be adding later some other elements that act as decoration (bushes, fences, flowers…) and need to appear at the back as well. For this, we will create a new group to store these kind of objects:
+```html
+function loadLevel(data) {
+    bgDecoration = game.add.group();
+    // ...
+};
+```
+Since this group is created before any other, the objects it contains will appear below the rest.
+
+3. We will split the creation of the door and the key in separate functions. The door will be created with a new function spawnDoor:
+```html
+function spawnDoor(x, y){
+    door = bgDecoration.create(x, y, 'door');
+    door.anchor.setTo(0.5, 1);
+    game.physics.enable(door);
+    door.body.allowGravity = false;
+}
+```
+Note that we have enabled physics in it. This is because we are going to detect if there is a collision between the door and the main character and see if the key has been already picked to trigger the win condition.
+
+4. Now we just need to call the function from loadLevel:
+
+function _loadLevel(data) {
+    // ...
+    // after spawning the coins in this line:
+    // data.coins.forEach(spawnCoin, this);
+    spawnDoor(data.door.x, data.door.y);
+    // ...
+};
+5. Load the game in the browser and see how the door has been created:
+
+![Door](https://mozdevs.github.io/html5-games-workshop/assets/platformer/door_spawned.png)
+
+#### Create the key
+
+1. The key is very similar to the door, but it just has a single image, not a spritesheet:
+
+```html
+function preload() {
+    // ...
+    game.load.image('key', 'images/key.png');
+};
+```
+2. As with the door, we will have a separate new function to spawn the key:
+```html
+function spawnKey(x, y){
+    key = bgDecoration.create(x, y, 'key');
+    key.anchor.set(0.5, 0.5);
+    game.physics.enable(key);
+    key.body.allowGravity = false;
+}
+```
+Since the key should also appear behind enemies and other sprites, we are adding it to the same group as the door.
+
+3. And we call the spawnKey function just after having created the door:
+
+function loadLevel(data) {
+    // ...
+    // add it below the call to spawnDoor
+    // spawnDoor(data.door.x, data.door.y);
+    spawnKey(data.key.x, data.key.y);
+    // ...
+};
+4. Now you should be able to see the key at the top right region of the screen!
+
+![Static key](https://mozdevs.github.io/html5-games-workshop/assets/platformer/key_spawned.png)
+
+### Implement the win condition
+
+1. The win condition is touching the door once the character has picked up the key. We are going to store whether the key has been picked up or not in a flag, as a global variable hasKey
+
+var hasKey = false;
+
+The hasKey flag will be set to true once the key has been collected.
+
+2. To make sure the player understands that picking up the key is an important action, we are going to play a sound effect when this happens. So let's load its asset and create a Phaser.Sound instance for it. We are doing the same for the "open door" sound effect here as well.
+
+```html
+function preload() {
+    // ...
+    game.load.audio('sfx:key', 'audio/key.wav');
+    game.load.audio('sfx:door', 'audio/door.wav');
+};
+```
+```html
+function create(){
+    sfxKey = game.add.audio('sfx:key');
+    sfxDoor = game.add.audio('sfx:door');
+}
+```
+3. We are going to collect the key in the same way that we collect the coins: call overlap in the Arcade physics engine and then kill the key so it doesn't appear anymore. We will also play the sound effect, and set hasKey to true:
+
+```html
+function handleCollisions() {
+    // ...
+    game.physics.arcade.overlap(hero, key, onHeroVsKey, null, this)
+};
+```
+```html
+function onHeroVsKey(hero, key){
+    sfxKey.play();
+    key.kill();
+    hasKey = true;
+}
+```
+4. Play the game, fetch the key and notice how it disappears and the sound effect is playing.
+
+5. We now have the first part of the win condition: fetching the key. Let's implement the final one: opening the door with it.
+
+```html
+function handleCollisions() {
+    // ...
+    game.physics.arcade.overlap(hero, door, onHeroVsDoor,
+        // ignore if there is no key or the player is on air
+        function (hero, door) {
+            return hasKey && hero.body.touching.down;
+        });
+};
+```
+This time, we have made use of the filter function we can pass to overlap. This is because we don't want the overlap test to pass if the player hasn't fetched the key yet or if the main character is jumping –it would be weird to open a key while jumping, right?
+
+6. The collision function looks like this:
+
+```html
+function onHeroVsDoor(hero, door){
+    sfxDoor.play();
+    game.state.restart();
+}
+```
+
+For now, we are just playing a sound effect and restarting the level. Later on, we will implement level switching so the player can advance through all of them!
+
+7. Try it! Play the level, fetch the key and then go back to the door. The level should restart and you should hear the door opening.
+
+### Add the key icon
+
+Last, we will add an icon next to the scoreboard to display if the key has been picked up. We will use a spritesheet for it:
+```html
+function preload() {
+    // ...
+    game.load.spritesheet('icon:key', 'images/key_icon.png', 34, 30);
+}
+```
+We will make an image in the create function:
+```html
+function create() {
+    keyIcon = game.make.image(0, 19, 'icon:key');
+    keyIcon.anchor.set(0, 0.5);
+    // ...
+    hud.add(keyIcon);
+};
+```
+Don't forget to move the scoreboard to the right to make room for the key icon! Change the spawning point of the coin icon:
+```html
+function create() {
+    // ...
+    // remove the previous let coinIcon = ... line and use this one instead
+    coinIcon = game.make.image(40, 0, 'icon:coin');
+    // ...
+};
+```
+If you load the game you will be able to see the icon!
+
+![Key icon (empty frame)](https://mozdevs.github.io/html5-games-workshop/assets/platformer/key_icon_empty.png)
+
+Now we need to change the frame of the spritesheet depending on whether the key has been picked up or not. With sprites, we have used animations before to handle spritesheets, but since this is not an animation and we don't need to control the timing, we can just use the frame property to select the frame index we want:
+
+```html
+function update() {
+    // ...
+    //Add the key icon
+    keyIcon.frame = hasKey ? 1 : 0;
+};
+```
+Play the level again, pick up the key and… ta-da!
+
+![Key icon (filled)](https://mozdevs.github.io/html5-games-workshop/assets/platformer/key_icon_filled.png)
+
+### Checklist
+
+- A door and a key appear in the level.
+- If the main character picks up the key, it disappears and a sound effect is played.
+- The level restarts when the main character gets to the door, having picked up the key.
+- The level does not restart when the main character gets to the door when the key has not been collected.
+- There is an icon at the top left part of the screen that indicates if the key has been picked up.
