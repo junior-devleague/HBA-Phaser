@@ -424,7 +424,7 @@ Try this out in the browser! Can you move left and right? Yes? Well done! But no
 #### Stop the main character
 
 We didn't need to do this before because we were modifying the position, but now we are modifying the velocity –and obviously objects with a non-zero velocity, move. We can stop the character by setting its speed to zero, and we can do that just by passing 0 as the direction when no key is being pressed:
-
+```html
 function handleInput() {
     if (leftKey.isDown) { // move hero left
         // ...
@@ -436,9 +436,10 @@ function handleInput() {
         move(0);
     }
 };
+```
 #### Prevent the main character to get out of the screen
 
-This is a taste of what a physics engine can do for us with very little code from our part. Let's prevent the main character to move outside the bounds of the screen. In Phaser this can be done by setting a flag in the body. Edit the Hero constructor:
+This is a taste of what a physics engine can do for us with very little code from our part. Let's prevent the main character to move outside the bounds of the screen. In Phaser this can be done by setting a flag in the body. Edit the function:
 
 ```html
 function spawnCharacters(data){
@@ -906,12 +907,13 @@ function spawnEnemyWall(x, y, side){
 }
 ```
 4. We need to resolve collisions against these walls so the spiders can't go through them, right after checking for collisions against platforms…
-
+```html
 function handleCollisions() {
     game.physics.arcade.collide(spiders, platforms);
     game.physics.arcade.collide(spiders, enemyWalls);
     // ...
 };
+```
 5. If you reload the browser you can see how some pink walls stop the spiders from falling!
 
 ![Spider blocked by wall](https://mozdevs.github.io/html5-games-workshop/assets/platformer/spider_vs_wall.png)
@@ -1018,12 +1020,13 @@ function onHeroVsEnemy(hero, enemy){
 }
 ```
 2. Try it and you should be able to kill the spiders. But it looks a bit odd, isn't it? Let's add a small bounce to the main character, like in classic platformers:
-
+```html
 function onHeroVsEnemy(hero, enemy){
     if (hero.body.velocity.y > 0) { // kill enemies when hero is falling
         hero.body.velocity.y = -200;
     }
 }
+```
 3. Try it again. Much better, isn't it?
 
 Bouncing on enemies
@@ -1043,7 +1046,7 @@ function spawnCharacters(data){
 }
 ```
 2. Once thing we are going to need to do is to delay the actual killing, for when a sprite doesn't exist it's not visible and doesn't get updated. Let's add a new method for the spider to agonize:
-
+```html
 function spawnSpider(){
     spider = spiders.create(spider.x, spider.y, 'spider');
     spider.anchor.set(0.5);
@@ -1056,10 +1059,11 @@ function spawnSpider(){
     spider.body.collideWorldBounds = true;
     spider.body.velocity.x = Spider.speed;
 }
+```
 Note how we are disabling the body to remove the sprite from physics operation. This is important so the spider stops and isn't taken into account for collisions.
 
 3. Now modify the onHeroVsEnemy function
-
+```html
 function onHeroVsEnemy(hero, enemy) {
     // ...
     if (hero.body.velocity.y > 0) {
@@ -1068,6 +1072,7 @@ function onHeroVsEnemy(hero, enemy) {
     }
     // ...
 };
+```
 4. It should be working now!
 
 ![Spider dying animation](https://mozdevs.github.io/html5-games-workshop/assets/platformer/enemy_dying.gif)
@@ -1093,12 +1098,13 @@ It's important to know that in order to render a text with a bitmap font, we nee
 #### Keep track of how many coins have been collected
 
 1. We need to create a global variable coinPickupCount that will keep track of the coints
-
+```html
 var coinPickupCount = 0;
 
 function onHeroVsCoin(hero, coin){
 	coinPickupCount++;
 }
+```
 
 #### Draw a coin icon on top of everything
 
@@ -1331,7 +1337,7 @@ function spawnDoor(x, y){
 Note that we have enabled physics in it. This is because we are going to detect if there is a collision between the door and the main character and see if the key has been already picked to trigger the win condition.
 
 4. Now we just need to call the function from loadLevel:
-
+```html
 function _loadLevel(data) {
     // ...
     // after spawning the coins in this line:
@@ -1339,6 +1345,7 @@ function _loadLevel(data) {
     spawnDoor(data.door.x, data.door.y);
     // ...
 };
+```
 5. Load the game in the browser and see how the door has been created:
 
 ![Door](https://mozdevs.github.io/html5-games-workshop/assets/platformer/door_spawned.png)
@@ -1365,7 +1372,7 @@ function spawnKey(x, y){
 Since the key should also appear behind enemies and other sprites, we are adding it to the same group as the door.
 
 3. And we call the spawnKey function just after having created the door:
-
+```html
 function loadLevel(data) {
     // ...
     // add it below the call to spawnDoor
@@ -1373,6 +1380,7 @@ function loadLevel(data) {
     spawnKey(data.key.x, data.key.y);
     // ...
 };
+```
 4. Now you should be able to see the key at the top right region of the screen!
 
 ![Static key](https://mozdevs.github.io/html5-games-workshop/assets/platformer/key_spawned.png)
