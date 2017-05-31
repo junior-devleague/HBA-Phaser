@@ -63,6 +63,11 @@ function preload(){
 
     game.load.audio('sfx:key', 'audio/key.wav');
     game.load.audio('sfx:door', 'audio/door.wav');
+
+    game.load.spritesheet('icon:key', 'images/key_icon.png', 34, 30);
+
+    //Load the other level
+    game.load.json('level:0', 'data/level00.json');
 };
 
 function create(){
@@ -87,20 +92,24 @@ function create(){
 	})
 
 	//Places coin at top left of screen
-	coinIcon = game.make.image(0, 0, 'icon:coin');
+	coinIcon = game.make.image(40, 0, 'icon:coin');
 
     hud = game.add.group();
     hud.add(coinIcon);
     hud.position.set(10, 10);
 
+    keyIcon = game.make.image(0, 19, 'icon:key');
+    keyIcon.anchor.set(0, 0.5);
+
     //Places text at top left of screen, next to coin
     var NUMBERS_STR = '0123456789X ';
     coinFont = game.add.retroFont('font:numbers', 20, 26, NUMBERS_STR, 6);
 
-    var coinScoreImg = game.make.image(coinIcon.x + coinIcon.width, coinIcon.height / 2, coinFont);
-    coinScoreImg.anchor.set(0, 0.5);
+    var coinScoreImg = game.make.image(100 + coinIcon.width, coinIcon.height / 2, coinFont);
+    coinScoreImg.anchor.set(1, 0.5);
 
     hud.add(coinScoreImg);
+    hud.add(keyIcon);
 }
 
 function update(){
@@ -112,6 +121,11 @@ function update(){
 	if (hero.animations.name !== animationName) {
         hero.animations.play(animationName);
     }
+
+    console.log(keyIcon.frame);
+
+    //Add the key icon
+    keyIcon.frame = hasKey ? 1 : 0;
 }
 
 function handleCollisions(){
@@ -321,7 +335,8 @@ function onHeroVsKey(hero, key){
 
 function onHeroVsDoor(hero, door){
 	sfxDoor.play();
-    game.state.restart();
+    //game.state.restart();
+    game.state.restart(true, false, { level: level + 1 });
 }
 
 function getAnimationName(){
