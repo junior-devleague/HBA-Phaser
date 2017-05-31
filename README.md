@@ -787,3 +787,173 @@ Now you should be able to move the main character and collect all the coins in t
 - Coins are displayed in the level with an animation.
 - The main character can pick up coins, and they disappear when it happens.
 - There's a sound effect playing when picking up a coin.
+
+## Walking enemies
+
+Right now the only challenge the player needs to overcome in our game is to execute jumps properly. It's not very fun –specially since there are no pits the character can fall into–, so let's add a hazard in the form of enemies.
+
+Meet the mighty spiders!
+
+![Walking spider](https://mozdevs.github.io/html5-games-workshop/assets/platformer/walking_spider.gif)
+
+This enemy has a simple behaviour: move horizontally until it finds a "border" (a wall, the bounds of the screen, or the end of the platform) and then turn into the opposite direction.
+
+As you could see in the GIF, spiders are animated. This is its spritesheet:
+
+![Spider spritesheet](https://mozdevs.github.io/html5-games-workshop/assets/platformer/spider_spritesheet.png)
+
+We will use a trick so the spiders don't fall off platforms: *invisible walls*. These walls will be sprites, with a physic body, but will not be seen. The main character will also be oblivious to them. But the spiders… the spiders will collide against these walls and turn around!
+
+Here is how these walls would look like, if they were being displayed: note that there's one at the edge of each platform.
+
+![Invisible walls](https://mozdevs.github.io/html5-games-workshop/assets/platformer/invisible_walls.png)
+
+### Tasks
+
+#### Create a custom sprite for the enemies
+
+1. First we need to load the spritesheet in preload:
+
+```html
+function preload() {
+    // ...
+    game.load.spritesheet('spider', 'images/spider.png', 42, 32);
+};
+```
+
+#### Spawn the spiders
+
+1. The level JSON file contains the points where the spiders should be created, so we will spawn them in loadLevel, as we have done with the rest of the sprites. Add there a new group to store the spiders, right below where the coins group is being created. We are also passing the spiders data to the spawnCharacters method.
+
+```html
+function loadLevel(data) {
+    spiders = game.add.group();
+}
+```
+
+2. Now spawn the spiders at spawnCharacters:
+
+```html
+function spawnCharacters(data){
+    data.spiders.forEach(function (spider){
+    	var sprite = game.add.sprite(spider.x, spider.y, 'spider');
+    	spiders.add(sprite);
+    	sprite.anchor.set(0.5);
+	    // animation
+	    sprite.animations.add('crawl', [0, 1, 2], 8, true);
+	    sprite.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
+	    sprite.animations.play('crawl');
+	    game.physics.enable(sprite);
+    	sprite.body.collideWorldBounds = true;
+    	sprite.body.velocity.x = 100;
+    })
+}
+```
+Try it out and you will see a small disaster…
+
+![Spiders affected by gravity](https://mozdevs.github.io/html5-games-workshop/assets/platformer/spider_disaster.gif)
+
+This is happening because the spiders are being affected by gravity and restricted to stay within the screen bounds, but we are not resolving collisions against the world (i.e. the platforms!).
+
+### Resolve collisions
+
+1. The first step is to enable collision resolution between the spiders and the platforms, like we did with the main character:
+
+```html
+function handleCollisions() {
+    game.physics.arcade.collide(spiders, platforms);
+    // ...
+};
+```
+
+### Add invisible "walls" so the spiders don't fall off platforms
+
+1. Let's add those invisible walls so the poor spiders don't fall off. Let's load the image first –it will not be displayed, but it's used so the sprite knows how big the wall is:
+
+```html
+function preload() {
+    // ...
+    game.load.image('invisible-wall', 'images/invisible_wall.png');
+    // ...
+};
+```
+
+2. We also need a group to store these walls, so we can do collision detection later. Create this group after the one that holds the spiders:
+
+```html
+function loadLevel(data) {
+    // ...
+    spiders = game.add.group();
+    enemyWalls = game.add.group();
+    // ...
+};
+```
+3. Now let's create two walls per spawned platform: one at the left side, another one at the right side:
+```html
+function spawnPlatform(platform) {
+    // ...
+    spawnEnemyWall(platform.x, platform.y, 'left');
+    spawnEnemyWall(platform.x + sprite.width, platform.y, 'right');
+};
+```
+```html
+function spawnEnemyWall(x, y, side){
+	var sprite = enemyWalls.create(x, y, 'invisible-wall');
+	sprite.anchor.set(side === 'left' ? 1 : 0, 1);
+	game.physics.enable(sprite);
+	sprite.body.immovable = true;
+	sprite.body.allowGravity = false;
+}
+```
+4. We need to resolve collisions against these walls so the spiders can't go through them, right after checking for collisions against platforms…
+
+function handleCollisions() {
+    game.physics.arcade.collide(spiders, platforms);
+    game.physics.arcade.collide(spiders, enemyWalls);
+    // ...
+};
+5. If you reload the browser you can see how some pink walls stop the spiders from falling!
+
+![Spider blocked by wall](https://mozdevs.github.io/html5-games-workshop/assets/platformer/spider_vs_wall.png)
+
+6. We obviously don't want to show those walls to the player, so let's hide them right after creating the group. We can hide game entities by setting their visible property to false:
+
+```html
+function loadLevel(data) {
+    // ...
+    enemyWalls = game.add.group();
+    enemyWalls.visible = false;
+    // ...
+};
+```
+
+#### Make the spiders turn
+
+1. We know that there is a flag in a sprite's body, touching, that we can query to see whether the sprite is touching another one. These is what we need to detect that we have colliding against a wall or a platform.
+
+However, we will also need to check for the blocked flag, since it will tell us collisions against the world bounds.
+
+Add an update method to Spider. This method will be called automatically by Phaser every frame. Remember that we must add new methods to custom sprites after having cloned their parent's prototype:
+
+```html
+function moveSpider(){
+    spiders.forEach(function (spider){
+        if (spider.body.touching.right || spider.body.blocked.right) {
+            spider.body.velocity.x = -100; // turn left
+        }
+        else if (spider.body.touching.left || spider.body.blocked.left) {
+            spider.body.velocity.x = 100; // turn right
+        }
+    })
+}
+```
+
+Done! Spiders should be turning around when they reach the end of the platform, a wall, or the border of the screen:
+
+![Spider turning into the opposite direction](https://mozdevs.github.io/html5-games-workshop/assets/platformer/spider_turning.gif)
+
+#### Checklist
+
+- There are three cute spiders walking around happily without falling down or going through platforms.
+- Spiders turn when they reach an obstacle or the end of the platform, so they stay in motion continuously.
+- The main character cannot influence the spiders movement in any way.
