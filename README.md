@@ -957,3 +957,117 @@ Done! Spiders should be turning around when they reach the end of the platform, 
 - There are three cute spiders walking around happily without falling down or going through platforms.
 - Spiders turn when they reach an obstacle or the end of the platform, so they stay in motion continuously.
 - The main character cannot influence the spiders movement in any way.
+
+## Death
+
+We have enemies, but right now there's no interaction between them and the main character. Let's allow them to kill each other!
+
+- The spiders will kill the main character simply by touching them.
+- The main character will only be able to kill an enemy by jumping (or falling) over them.
+As with picking up coins, we will need to merely have a hit test (with overlap) and not resolving collisions (i.e. separating bodies, etc.).
+
+### Tasks
+
+#### Make the spiders able to kill the main character
+
+1. Killing or being killed is an important event, and we should provide a lot of feedback to the user. We will be playing a sound effect when this happens, so let's load the audio asset and create its corresponding sound entity:
+
+```html
+function create() {
+    // ...
+    sfxStomp = game.add.audio('sfx:stomp');
+};
+```
+```html
+function preload() {
+    // ...
+    game.load.audio('sfx:stomp', 'audio/stomp.wav');
+};
+```
+2. To do the killing, we need to detect when a spider is touching the main character. We can do this by calling overlap:
+
+```html
+function handleCollisions() {
+    // ...
+    game.physics.arcade.overlap(hero, spiders, onHeroVsEnemy, null, this);
+};
+```
+3. We need to implement the onHeroVsEnemy function. For now, we'll just make the spider to kill the hero. When that happens, we will play a sound effect and restart the level (by restarting the game state).
+
+function onHeroVsEnemy(hero, enemy) {
+    sfxStomp.play();
+    game.state.restart();
+};
+4. Try it in the browser and make sure that the level restarts whenever the main character touches an enemy.
+
+### Kill those enemies!
+
+1. Let's allow the main character to kill the spiders. To detect whether it's falling or not, we can check the vertical velocity of the body. If it's positive, it means the character is falling and, thus, able to kill! Let's modify the onHeroVsEnemy callback to detect if the contact has been produced during a fall:
+
+```html
+function onHeroVsEnemy(hero, enemy){
+	if (hero.body.velocity.y > 0) { // kill enemies when hero is falling
+        hero.body.velocity.y = -200;
+        die(enemy);
+        sfxStomp.play();
+    }
+    else { // game over -> restart the game
+        sfxStomp.play();
+        game.state.restart();
+    }
+}
+```
+2. Try it and you should be able to kill the spiders. But it looks a bit odd, isn't it? Let's add a small bounce to the main character, like in classic platformers:
+
+function onHeroVsEnemy(hero, enemy){
+    if (hero.body.velocity.y > 0) { // kill enemies when hero is falling
+        hero.body.velocity.y = -200;
+    }
+}
+3. Try it again. Much better, isn't it?
+
+Bouncing on enemies
+
+### Dying animation
+
+1. Let's make killing enemies even more satisfying by adding an animation for when the spider has been hit. We will use the last two frames of the spritesheet for this.
+
+```html
+function spawnCharacters(data){
+
+    data.spiders.forEach(function (spider){
+    	// ...
+	    sprite.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
+	// ...
+    })
+}
+```
+2. Once thing we are going to need to do is to delay the actual killing, for when a sprite doesn't exist it's not visible and doesn't get updated. Let's add a new method for the spider to agonize:
+
+function spawnSpider(){
+    spider = spiders.create(spider.x, spider.y, 'spider');
+    spider.anchor.set(0.5);
+    spider.animations.add('crawl', [0, 1, 2], 8, true);
+    spider.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 1);
+    spider.animations.play('crawl');
+
+    // physic properties
+    game.physics.enable(spider);
+    spider.body.collideWorldBounds = true;
+    spider.body.velocity.x = Spider.speed;
+}
+Note how we are disabling the body to remove the sprite from physics operation. This is important so the spider stops and isn't taken into account for collisions.
+
+3. Now modify the onHeroVsEnemy function
+
+function onHeroVsEnemy(hero, enemy) {
+    // ...
+    if (hero.body.velocity.y > 0) {
+        // make sure you remove enemy.kill() !!!
+        die(enemy);
+    }
+    // ...
+};
+4. It should be working now!
+
+![Spider dying animation](https://mozdevs.github.io/html5-games-workshop/assets/platformer/enemy_dying.gif)
