@@ -64,12 +64,14 @@ The graphic and audio assets of the game in this guide have been released in the
 1. Create a directory/folder for the game in your computer.
 2. Download the initial project skeleton and unzip its contents in the directory you just created. Make sure that the resulting structure looks like this:
 
+```html
 game
 ├── audio
 ├── data
 ├── images
 ├── index.html
 └── js
+```
 
 3. Launch a local web server with:
 `live-server` and check that you can get to the index.html file in the browser. For instance, if you have launched your web server in the port 3000, you should be able to see the contents of index.html by accessing http://0.0.0.0:3000.
@@ -78,7 +80,9 @@ game
 
 HTML5 games need a <canvas> element to draw graphics. Phaser can create one automatically when we initialise the game. We need to supply the ID of the element that will wrap the canvas –in our case, it will be a <div id="game"> that we have in our index.file. We will also be providing the canvas' dimensions (960✕600).
 
-`var game = new Phaser.Game(960, 600, Phaser.AUTO, 'game', {init: init, preload: preload, create: create, update: update});`
+```html
+var game = new Phaser.Game(960, 600, Phaser.AUTO, 'game', {init: init, preload: preload, create: create, update: update});
+```
 
 You might be wondering what is this Phaser.AUTO parameter we are passing. It's to specify whether we want a 2D canvas or a WebGL canvas. By setting it to AUTO, it will try to use a WebGL canvas –for most games it's most performant– and, when it isn't available, will fallback to use a regular 2D canvas.
 
