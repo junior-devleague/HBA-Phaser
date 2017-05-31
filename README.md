@@ -654,3 +654,136 @@ Try it out in the browser. With a bit of skill, you should be able to jump to re
 - The character can jump!
 - The character can not jump mid-air.
 - A sound effect is played when jumping.
+
+## Pickable coins
+
+We have the core game mechanic –jumping– in place, so it's time to make the game more attractive and fun. We will add some coins for the main character to pick up. These coins will also be animated, so we will learn how to animate sprites.
+
+In Phaser, animations are keyframe-based. This means that the sprite will change the image it's displaying periodically, and thus we will see it animated. If you have worked with CSS before, does this sound familiar?
+
+![Coin spritesheet](https://mozdevs.github.io/html5-games-workshop/assets/platformer/coin_spritesheet.png)
+
+This is our coin's spritesheet, and Phaser makes really easy to work with them and use them for animations.
+
+Yup, CSS borrowed the name for the image technique from game development!
+
+To collect the coins we will detect when the main character has touched any of them. The Arcade physics engine will assist us to do so, but we will another method, overlap, instead of collide. Why? collide actually resolves collisions, by separating the bodies so objects don't go through other objects: this allows for behaviours such as bouncing, pushing, blocking, etc. However we don't want the coins to block the character, so we will merely perform a hit test and see if the character's body is overlapping a coin's body.
+
+### Tasks
+
+#### Load the spritesheet
+
+1. Spritesheets are a special type of asset, so we need to load them with game.load.spritesheet –and not with game.load.image. Note that we need to specify the dimensions of each individual frame (22✕22 pixels in this case):
+
+```html
+function preload() {
+    // ...
+    game.load.spritesheet('coin', 'images/coin_animated.png', 22, 22);
+};
+```
+
+#### Spawn the coins
+
+1. Coins data is stored in the level JSON file, so we will spawn them when we load the level. We also need a group to store all the coins, so we can detect later whether the player has touched them.
+
+```html
+function loadLevel(data) {
+    platforms = game.add.group();
+    coins = game.add.group();
+
+    // ...
+
+    spawnCharacters({hero: data.hero, spiders: data.spiders});	
+    // spawn important objects
+    data.coins.forEach(spawnCoin, this);
+
+    // ...
+};
+```
+2. Onto our new spawnCoin method! Coins will have no behavior (besides a looping animation), so we don't need a custom class for it and can settle for regular Phaser.Sprite instances.
+
+```html
+function spawnCoin(coin) {
+    var sprite = coins.create(coin.x, coin.y, 'coin');
+    sprite.anchor.set(0.5, 0.5);
+};
+```
+3. This is a good point to see if it's working in the browser. You should be able to see some –still static!– coins spawned through all the level.
+
+![Static coins](https://mozdevs.github.io/html5-games-workshop/assets/platformer/static_coins.png)
+
+#### Add an animation!
+
+1. Each sprite can have multiple animations, but here we only need one (the coin rotating). When adding a new animation, we specify which frame indices it will use. Optionally, we can set the animation speed (measured in frames per second) and whether the animation should loop or not. We will add and play the animation in the spawnCoin method:
+
+```html
+function spawnCoin(coin) {
+    // ...
+    sprite.animations.add('rotate', [0, 1, 2, 1], 6, true); // 6fps, looped
+    sprite.animations.play('rotate');
+};
+```
+2. Reload the browser and you should see the coins animated like this:
+
+![Animated coin](https://mozdevs.github.io/html5-games-workshop/assets/platformer/animated_coin.gif)
+
+#### Make the character pick up coins
+
+`. Let's check for collisions between the character and the coins. Since we will use the physics engine for this, we need to give the coins a physic body (and don't forget to disable gravity or the coins will fall!).
+
+```html
+function spawnCoin(coin) {
+    // ...
+    this.game.physics.enable(sprite);
+    sprite.body.allowGravity = false;
+};
+```
+2. Now onto the detection itself! As we have said before, we will use overlap and not collide because we just want to query for overlaps, and not the coins to block the character.
+
+function handleCollisions() {
+    //...
+    game.physics.arcade.overlap(hero, coins, onHeroVsCoin, null, this);
+};
+If you are wondering what that null is for… We can add a filter function to exclude some of the sprites for this check. Since we want to check all coins, we can just pass null to indicate "no filter, please".
+
+3. Let's implement now onHeroVSCoin, which is the callback that will be executed every time the main character touches a coin. What we will be doing is to get rid off the coin –this can be done by calling the Phaser.Sprite.kill method.
+
+function onHeroVsCoin(hero, coin){
+    coin.kill();
+};
+
+#### Play some audio feedback
+
+1. Picking coin should feel rewarding and playing a sound effect will help to achieve this. Let's load it in preload:
+
+```html
+function preload() {
+    // ...
+    game.load.audio('sfx:coin', 'audio/coin.wav');
+};
+```
+
+2. Now we just have to create a Phaser.Sound instance…
+
+```html
+function create(){
+    // ...
+    sfxCoin = game.add.audio('sfx:coin');
+}
+```
+
+3. And play the sound effect in the overlap callback!
+
+```html
+function onHeroVsCoin(hero, coin) {
+    sfx.coin.play();
+    // ...
+};
+```
+Now you should be able to move the main character and collect all the coins in the level.
+
+#### Checklist
+
+- Coins are displayed in the level with an animation.
+- The main character can pick up coins, and they disappear when it happens.
+- There's a sound effect playing when picking up a coin.
