@@ -245,3 +245,62 @@ Refresh your browser and you should see our platform sprites!
 
 - You can see platforms rendered over the background
 - Make sure you are using `game.add.sprite` to create the platforms and not `game.add.image`!
+
+## The main character sprite
+
+The hero or main character will be another *sprite* in our game. However, this sprite is more complex than the platforms, since it needs more business logics: moving around, jumping, etc.
+
+Wouldn't be nice to have a class for these sprites with `jump`, `move`, etc. methods? 
+
+### Tasks
+
+#### Load the hero image
+
+1. In `preload`:
+
+```html
+function preload() {
+    // ...
+    game.load.image('hero', 'images/hero_stopped.png');
+};
+```
+
+### Spawn the hero when loading the level.
+
+1. As with platforms, the hero position is stored in the JSON level file. We will create a new function, spawnCharacters, to spawn the hero and, later on, the enemies.
+
+```html
+function loadLevel (data) {
+    //...
+    // spawn hero and enemies
+    spawnCharacters({hero: data.hero});
+};
+function spawnCharacters (data) {
+    // spawn hero
+    hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
+    hero.anchor.set(0.5, 0.5);
+};
+```
+2. Check how it looks like. You should see the hero… not in a very good position:
+
+![Bad-positioned hero](https://mozdevs.github.io/html5-games-workshop/assets/platformer/hero_bad_position.png)
+
+Why is this? Is the level data wrong? What happens is that, usually, we'd like sprites to be handled by their center. This helps in operations like rotations, flipping, etc. and it's also more intuitive. Let's fix this.
+
+In Phaser, the point where we handle sprites and images is called anchor. It's a vector, and it accepts values in the 0 (left) to 1 (right) range. So the central point would be (0.5, 0.5). 
+
+```html
+function spawnCharacters (data) {
+    // spawn hero
+    hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
+    hero.anchor.set(0.5, 0.5);
+};
+```
+
+Refresh the browser again and you should see the hero positioned just over the ground:
+
+![Hero positioned correctly in the scenario](https://mozdevs.github.io/html5-games-workshop/assets/platformer/step03_check.png)
+
+### Checklist
+
+- There is a hero sprite over the ground, on the bottom left part of the level.
