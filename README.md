@@ -559,3 +559,98 @@ Everything should be working as expected now! As a bonus, see how the character 
 - The main character does not fall through the ground.
 - The main character can't go through the small wall on the ground.
 Now on to doing some jumps!
+
+## Jumps
+
+Once we have gravity in place, making the main character to jump is almost trivial! If you remember physics class in school, a parabolic movement needs downward gravity applied to a body (we already did that in the previous step) and then some speed applied at the initial moment upwards so the body goes up and down in a *parabola*.
+
+We will make the main character to jump when the player presses the up arrow key. We will also play a sound effect when this happens, since *audio is crucial* –even more than graphics– to provide feedback to the user!
+
+### Tasks
+
+#### Detect when the up key has been pressed
+
+1. Create an instance of `Phaser.Key` tied to the up arrow key. We will do that by modifying the addKeys call we already had in place in create:
+
+```html
+function create() {
+    // ...
+    leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+    rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+    upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP); //add this line
+};
+```
+
+Instead checking for whether the key is pressed or not, we will listen for the "on key down" event and jump when it happens. In Phaser, events are called signals (they are instances of Phaser.Signal), and it's very easy to subscribe and unsubscribe from them.
+
+```html
+upKey.onDown.add(function(){
+    jump();
+})
+```
+Like many other functions in JavaScript, the extra argument after the callback is what will become the this context when the callback is executed.
+
+#### Implement the jump function
+
+1. Let's implement the jump function:
+
+```html
+function jump(){
+    hero.body.velocity.y = -600;
+}
+```
+2. Try it in the browser and check that the character can jump. You will find a bug, though: the character can jump mid-air! Although double jumps are not rare in platformer games, infinite jumps sure are. We will force the character to not jump mid-air.
+
+3. We can check if a body is touching another body. Since platforms have physic bodies, we can know whether the main character is touching another body at the bottom or not. Modify the jump method so it looks like this:
+
+```html
+function jump(){
+    var canJump = hero.body.touching.down;
+    //Ensures hero is on the ground or on a platform
+    if (canJump) {
+        hero.body.velocity.y = -600;
+    }
+    return canJump;
+}
+```
+
+Note that we are also returning whether the character managed to jump or not… we will use this soon!
+
+#### Play a sound effect when jumping
+
+Sounds are also a game entity, but they obviously don't get rendered on the screen. But the process to handle them is similar to images. Let's start by loading the audio asset in preload:
+```html
+function preload() {
+    // ...
+    game.load.audio('sfx:jump', 'audio/jump.wav');
+};
+```
+Now let's create the audio entity, which will be an instance of Phaser.Sound. We can create these and add them to the game world with the game.add factory, as usual:
+
+```html
+function create() {
+    sfxJump = game.add.audio('sfx:jump');
+};
+```
+Last, we need to play the sound effect when a jump has been made. Remember how we had the Hero.jump method to return true or false depending on whether the jump was possible? We will make use of this now! Modify the listener for the arrow key so it looks like this:
+
+```html
+function jump(){
+    var canJump = hero.body.touching.down;
+    //Ensures hero is on the ground or on a platform
+    if (canJump) {
+        hero.body.velocity.y = -600;
+        sfxJump.play();
+    }
+    return canJump;
+}
+```
+Try it out in the browser. With a bit of skill, you should be able to jump to reach all the platforms in the level.
+
+![Main character jumping](https://mozdevs.github.io/html5-games-workshop/assets/platformer/hero_jump.gif)
+
+#### Checklist
+
+- The character can jump!
+- The character can not jump mid-air.
+- A sound effect is played when jumping.
