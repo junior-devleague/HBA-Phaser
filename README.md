@@ -744,18 +744,21 @@ function spawnCoin(coin) {
 ```
 2. Now onto the detection itself! As we have said before, we will use overlap and not collide because we just want to query for overlaps, and not the coins to block the character.
 
+```html
 function handleCollisions() {
     //...
     game.physics.arcade.overlap(hero, coins, onHeroVsCoin, null, this);
 };
+```
 If you are wondering what that null is for… We can add a filter function to exclude some of the sprites for this check. Since we want to check all coins, we can just pass null to indicate "no filter, please".
 
 3. Let's implement now onHeroVSCoin, which is the callback that will be executed every time the main character touches a coin. What we will be doing is to get rid off the coin –this can be done by calling the Phaser.Sprite.kill method.
 
+```html
 function onHeroVsCoin(hero, coin){
     coin.kill();
 };
-
+```
 #### Play some audio feedback
 
 1. Picking coin should feel rewarding and playing a sound effect will help to achieve this. Let's load it in preload:
