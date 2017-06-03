@@ -403,15 +403,6 @@ The important thing to take into account is that each sprite will have a physica
 
 #### Make the main character use the physics engine for movement
 
-First we need to create a body for the character. This gets done when we "enable" physics for this sprite.
-
-```html
-function spawnCharacters(data){
-	//Make the main character use the physics engine for movement
-	game.physics.enable(hero);
-}
-```
-
 Now we just need to make the move method affect the body of the sprite instead of directly modifying its position. What we need is to modify the sprite's velocity so it can move left or right. Edit the move function so it looks like this:
 
 ```html
