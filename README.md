@@ -795,7 +795,7 @@ Now you should be able to move the main character and collect all the coins in t
 - The main character can pick up coins, and they disappear when it happens.
 - There's a sound effect playing when picking up a coin.
 
-## Walking enemies
+## 11. Walking enemies
 
 Right now the only challenge the player needs to overcome in our game is to execute jumps properly. It's not very fun –specially since there are no pits the character can fall into–, so let's add a hazard in the form of enemies.
 
