@@ -733,7 +733,7 @@ function spawnCoin(coin) {
 
 #### Make the character pick up coins
 
-`. Let's check for collisions between the character and the coins. Since we will use the physics engine for this, we need to give the coins a physic body (and don't forget to disable gravity or the coins will fall!).
+1. Let's check for collisions between the character and the coins. Since we will use the physics engine for this, we need to give the coins a physic body (and don't forget to disable gravity or the coins will fall!).
 
 ```html
 function spawnCoin(coin) {
