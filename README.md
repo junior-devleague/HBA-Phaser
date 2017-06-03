@@ -490,7 +490,8 @@ We are doing this here and not in PlayState.init to have more flexibility… in 
 function loadLevel(data) {
     // create all the groups/layers that we need
     platforms = game.add.group();
-    // ...
+    //Make sure this line of code is after!
+    data.platforms.forEach(spawnPlatform, this);
 };
 ```
 
@@ -498,6 +499,7 @@ function loadLevel(data) {
 
 ```html
 function spawnPlatform(platform) {
+    game.add.sprite(platform.x, platform.y, platform.image);
     var sprite = platforms.create(platform.x, platform.y, platform.image);
     game.physics.enable(sprite);
 };
