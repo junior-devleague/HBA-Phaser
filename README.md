@@ -152,7 +152,7 @@ If you check out the game, you should see a pretty background drawn in the scree
 - The background image is rendered in the screen.
 Rendering an image in the game loop is the first step in crafting games. Get ready for the next step!
 
-## Creating platforms
+## 4. Creating platforms
 
 A platformer game needs… platforms, right? There are multiple techniques to handling platforms and the physics related to them. In this workshop, we will consider the platforms as *sprites*, like other characters in the game.
 
@@ -246,7 +246,7 @@ Refresh your browser and you should see our platform sprites!
 - You can see platforms rendered over the background
 - Make sure you are using `game.add.sprite` to create the platforms and not `game.add.image`!
 
-## The main character sprite
+## 5. The main character sprite
 
 The hero or main character will be another *sprite* in our game. However, this sprite is more complex than the platforms, since it needs more business logics: moving around, jumping, etc.
 
@@ -304,7 +304,7 @@ Refresh the browser again and you should see the hero positioned just over the g
 
 - There is a hero sprite over the ground, on the bottom left part of the level.
 
-## Keyboard controls
+## 6. Keyboard controls
 
 The player will be able to control the main character with the keyboard. For now, we will make the character move left and right when the player presses the arrow keys.
 
@@ -380,7 +380,7 @@ function init(){
 - The character moves left and right with the arrow keys.
 - The character stays sharp after having moved. You can check this more easily if you zoom in your browser (Ctrl + for Win/Linux, or ⌘ + for Mac OS).
 
-## Moving sprites with physics
+## 7. Moving sprites with physics
 
 It's always a good idea to tie movement to time. Previously we just set the character to move a fixed amount per frame, but we are ignoring how many frames per second our game is executing!
 
@@ -457,7 +457,7 @@ function spawnCharacters(data){
 - The character stops if no key is being pressed.
 - The character cannot move out of the screen.
 
-## Gravity
+## 8. Gravity
 
 Using a physics engine makes jumping and handling gravity easy. Now we will handle gravity in the world, making the character step on platforms. And as a side effect, we will make the character not to go trough walls too!
 
@@ -561,7 +561,7 @@ Everything should be working as expected now! As a bonus, see how the character 
 - The main character can't go through the small wall on the ground.
 Now on to doing some jumps!
 
-## Jumps
+## 9. Jumps
 
 Once we have gravity in place, making the main character to jump is almost trivial! If you remember physics class in school, a parabolic movement needs downward gravity applied to a body (we already did that in the previous step) and then some speed applied at the initial moment upwards so the body goes up and down in a *parabola*.
 
@@ -656,7 +656,7 @@ Try it out in the browser. With a bit of skill, you should be able to jump to re
 - The character can not jump mid-air.
 - A sound effect is played when jumping.
 
-## Pickable coins
+## 10. Pickable coins
 
 We have the core game mechanic –jumping– in place, so it's time to make the game more attractive and fun. We will add some coins for the main character to pick up. These coins will also be animated, so we will learn how to animate sprites.
 
