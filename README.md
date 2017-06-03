@@ -783,7 +783,7 @@ function create(){
 
 ```html
 function onHeroVsCoin(hero, coin) {
-    sfx.coin.play();
+    sfxCoin.play();
     // ...
 };
 ```
