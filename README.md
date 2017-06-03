@@ -834,7 +834,9 @@ function preload() {
 
 ```html
 function loadLevel(data) {
+    // ...
     spiders = game.add.group();
+    spawnCharacters({hero: data.hero, spiders: data.spiders});
 }
 ```
 
@@ -842,6 +844,7 @@ function loadLevel(data) {
 
 ```html
 function spawnCharacters(data){
+    // ...
     data.spiders.forEach(function (spider){
     	var sprite = game.add.sprite(spider.x, spider.y, 'spider');
     	spiders.add(sprite);
