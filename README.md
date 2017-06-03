@@ -336,7 +336,14 @@ function move(direction){
 ```
 
 Remember how update and render were special phases of a state that were called automatically? Well, we will need to use update for this one: we want to check the status of the left and right arrow keys and, if they are pressed, move the character.
-
+```html
+function spawnCharacters (data) {
+    // ..
+    hero.anchor.set(0.5, 0.5);
+    //Make the main character use the physics engine for movement
+    game.physics.enable(hero);
+};
+```
 ```html
 function update(){
 	handleInput();
