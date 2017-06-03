@@ -498,8 +498,7 @@ function loadLevel(data) {
 
 ```html
 function spawnPlatform(platform) {
-    var sprite = platforms.create(
-        platform.x, platform.y, platform.image);
+    var sprite = platforms.create(platform.x, platform.y, platform.image);
     game.physics.enable(sprite);
 };
 ```
