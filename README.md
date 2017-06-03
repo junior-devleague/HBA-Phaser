@@ -584,8 +584,12 @@ function create() {
 Instead checking for whether the key is pressed or not, we will listen for the "on key down" event and jump when it happens. In Phaser, events are called signals (they are instances of Phaser.Signal), and it's very easy to subscribe and unsubscribe from them.
 
 ```html
-upKey.onDown.add(function(){
-    jump();
+function create() {
+    // ...
+    upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP); //add this line
+    upKey.onDown.add(function(){
+        jump();
+    };
 })
 ```
 Like many other functions in JavaScript, the extra argument after the callback is what will become the this context when the callback is executed.
