@@ -186,7 +186,8 @@ Phaser considers JSON files as another type of asset with can load within the ga
 
 ```html
 function preload(){
-  game.load.json('level:1', 'data/level01.json');
+  // game.load.image('background', 'images/background.png');
+  game.load.json('level:1', 'data/level01.json'); 
   // ...
 }
 ```
@@ -195,7 +196,7 @@ Now modify `create`:
 
 ```html
 function create(){
-  //...
+  // game.add.image(0, 0, 'background');
   loadLevel(this.game.cache.getJSON('level:1'));
 }
 
@@ -212,13 +213,14 @@ You can check this works if you add a `console.log(data)` in `function loadLevel
 
 ```html
 function preload() {
+    // game.load.json('level:1', 'data/level01.json');
     //spawn platform sprites
     game.load.image('ground', 'images/ground.png');
     game.load.image('grass:8x1', 'images/grass_8x1.png');
     game.load.image('grass:6x1', 'images/grass_6x1.png');
-    game.load.image('grass:4x1', 'images/grass_4x1.png');
-    game.load.image('grass:2x1', 'images/grass_2x1.png');
-    game.load.image('grass:1x1', 'images/grass_1x1.png');
+    // ? - load the image for grass:4x1
+    // ? - load the image for grass:2x1
+    // ? - load the image for grass:1x1
 };
 ```
 
@@ -261,6 +263,9 @@ Wouldn't be nice to have a class for these sprites with `jump`, `move`, etc. met
 ```html
 function preload() {
     // ...
+    game.load.image('grass:1x1', 'images/grass_1x1.png');
+
+    // load the hero image
     game.load.image('hero', 'images/hero_stopped.png');
 };
 ```
@@ -271,7 +276,8 @@ function preload() {
 
 ```html
 function loadLevel (data) {
-    //...
+    // game.add.image(0, 0, 'background');
+
     // spawn hero and enemies
     spawnCharacters({hero: data.hero});
 };
@@ -291,7 +297,7 @@ In Phaser, the point where we handle sprites and images is called anchor. It's a
 ```html
 function spawnCharacters (data) {
     // spawn hero
-    hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
+    // hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
     hero.anchor.set(0.5, 0.5);
 };
 ```
@@ -319,8 +325,8 @@ We can easily create Phaser.Key instances with the game.input.keyboard.addKeys m
 ```html
 function create(){
   //This sets the left and right keys as inputs for this game
-	leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
-	rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+    leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+    // ? - create input for the rightKey
 }
 ```
 You can perfectly create the keys in the create phase. But sometimes reserving create to spawn game entities that need the assets in preload can help to make the code more readable.
@@ -331,14 +337,14 @@ This is when having a custom class comes handy! Let's add a move method which wi
 
 ```html
 function move(direction){
-	hero.body.velocity.x = direction * 200;
+    hero.body.velocity.x = direction * 200;
 }
 ```
 
 Remember how update and render were special phases of a state that were called automatically? Well, we will need to use update for this one: we want to check the status of the left and right arrow keys and, if they are pressed, move the character.
 ```html
 function spawnCharacters (data) {
-    // ..
+    // hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
     hero.anchor.set(0.5, 0.5);
     //Make the main character use the physics engine for movement
     game.physics.enable(hero);
@@ -346,16 +352,16 @@ function spawnCharacters (data) {
 ```
 ```html
 function update(){
-	handleInput();
+    handleInput();
 }
 ```
 ```html
 function handleInput(){
-	if (leftKey.isDown) { // move hero left
+    if (leftKey.isDown) { // move hero left
         move(-1);
     }
     else if (rightKey.isDown) { // move hero right
-        move(1);
+        // ? - pass a parameter to the move function to move hero right
     }
 }
 ```
@@ -377,8 +383,8 @@ We can do this in the init function, since it gets executed before any other pha
 
 ```html
 function init(){
-	//Make hero sprite more focused when moving around
-	game.renderer.renderSession.roundPixels = true;
+    //Make hero sprite more focused when moving around
+    game.renderer.renderSession.roundPixels = true;
 }
 ```
 
@@ -407,12 +413,12 @@ Now we just need to make the move method affect the body of the sprite instead o
 
 ```html
 function move(direction){
-	hero.body.velocity.x = direction * 200;
-	if (hero.body.velocity.x < 0) {
+    // hero.body.velocity.x = direction * 200;
+    if (hero.body.velocity.x < 0) {
         hero.scale.x = -1;
     }
     else if (hero.body.velocity.x > 0) {
-        hero.scale.x = 1;
+        // ? - Change the hero scale when the velocity is more than 0
     }
 }
 ```
@@ -501,7 +507,7 @@ function loadLevel(data) {
 function spawnPlatform(platform) {
     game.add.sprite(platform.x, platform.y, platform.image);
     var sprite = platforms.create(platform.x, platform.y, platform.image);
-    game.physics.enable(sprite);
+    // ? - Enable the game physics for the sprite
 };
 ```
 
@@ -511,8 +517,8 @@ Phaser.Group.create is a factory method for sprites. The new sprite will be adde
 
 ```html
 function update(){
-	handleCollisions();
-	handleInput();
+    handleCollisions();
+    handleInput();
 };
 ```
 ```html
@@ -531,7 +537,7 @@ function handleCollisions(){
 
 ```html
 function spawnPlatform(platform) {
-    // ...
+    // game.physics.enable(sprite);
     sprite.body.allowGravity = false;
 };
 ```
@@ -544,7 +550,7 @@ function spawnPlatform(platform) {
 
 ```html
 function spawnPlatform(platform) {
-    // ...
+    // sprite.body.allowGravity = false;
     sprite.body.immovable = true;
 };
 ```
@@ -577,7 +583,7 @@ function create() {
     // ...
     leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
-    upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP); //add this line
+    // ? - Set the game input for the up key
 };
 ```
 
@@ -588,7 +594,7 @@ function create() {
     // ...
     upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP); //add this line
     upKey.onDown.add(function(){
-        jump();
+        // ? - Invoke the function 'jump'
     };
 })
 ```
@@ -614,7 +620,7 @@ function jump(){
     if (canJump) {
         hero.body.velocity.y = -600;
     }
-    return canJump;
+    // ? - return the variable canJump
 }
 ```
 
@@ -625,7 +631,9 @@ Note that we are also returning whether the character managed to jump or not… 
 Sounds are also a game entity, but they obviously don't get rendered on the screen. But the process to handle them is similar to images. Let's start by loading the audio asset in preload:
 ```html
 function preload() {
-    // ...
+    //game.load.image('grass:1x1', 'images/grass_1x1.png');
+
+    //Play a sound effect when jumping
     game.load.audio('sfx:jump', 'audio/jump.wav');
 };
 ```
@@ -633,6 +641,8 @@ Now let's create the audio entity, which will be an instance of Phaser.Sound. We
 
 ```html
 function create() {
+    // game.add.image(0, 0, 'background');
+
     sfxJump = game.add.audio('sfx:jump');
 };
 ```
@@ -644,7 +654,7 @@ function jump(){
     //Ensures hero is on the ground or on a platform
     if (canJump) {
         hero.body.velocity.y = -600;
-        sfxJump.play();
+        // ? - Call the method play from sfxJump
     }
     return canJump;
 }
@@ -693,11 +703,11 @@ function preload() {
 ```html
 function loadLevel(data) {
     platforms = game.add.group();
-    coins = game.add.group();
+    // ? - Add a group to the game and set it to the value of 'coins'
 
     // ...
 
-    spawnCharacters({hero: data.hero, spiders: data.spiders});	
+    spawnCharacters({hero: data.hero, spiders: data.spiders});  
     // spawn important objects
     data.coins.forEach(spawnCoin, this);
 
@@ -716,7 +726,7 @@ function spawnCoin(coin) {
 
 ![Static coins](https://mozdevs.github.io/html5-games-workshop/assets/platformer/static_coins.png)
 
-#### Add an animation!
+#### Add an animation! - !~EXTRA~!
 
 1. Each sprite can have multiple animations, but here we only need one (the coin rotating). When adding a new animation, we specify which frame indices it will use. Optionally, we can set the animation speed (measured in frames per second) and whether the animation should loop or not. We will add and play the animation in the spawnCoin method:
 
@@ -766,7 +776,7 @@ function onHeroVsCoin(hero, coin){
 ```html
 function preload() {
     // ...
-    game.load.audio('sfx:coin', 'audio/coin.wav');
+    // ? - Load the audio from audio/coin.wav and set its name as 'sfx:coin'
 };
 ```
 
@@ -775,6 +785,7 @@ function preload() {
 ```html
 function create(){
     // ...
+    // ? - Add the audio 'sfx:coin' and set as value of 'sfxCoin'
     sfxCoin = game.add.audio('sfx:coin');
 }
 ```
@@ -835,7 +846,7 @@ function preload() {
 ```html
 function loadLevel(data) {
     // ...
-    spiders = game.add.group();
+    // ? - add a group and set as value of 'spiders'
     spawnCharacters({hero: data.hero, spiders: data.spiders});
 }
 ```
@@ -846,16 +857,16 @@ function loadLevel(data) {
 function spawnCharacters(data){
     // ...
     data.spiders.forEach(function (spider){
-    	var sprite = game.add.sprite(spider.x, spider.y, 'spider');
-    	spiders.add(sprite);
-    	sprite.anchor.set(0.5);
-	    // animation
-	    sprite.animations.add('crawl', [0, 1, 2], 8, true);
-	    sprite.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
-	    sprite.animations.play('crawl');
-	    game.physics.enable(sprite);
-    	sprite.body.collideWorldBounds = true;
-    	sprite.body.velocity.x = 100;
+        var sprite = game.add.sprite(spider.x, spider.y, 'spider');
+        spiders.add(sprite);
+        sprite.anchor.set(0.5);
+        // animation
+        sprite.animations.add('crawl', [0, 1, 2], 8, true);
+        sprite.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
+        sprite.animations.play('crawl');
+        game.physics.enable(sprite);
+        sprite.body.collideWorldBounds = true;
+        // ? - Set the sprite.body.velocity.x to value 100
     })
 }
 ```
@@ -871,7 +882,10 @@ This is happening because the spiders are being affected by gravity and restrict
 
 ```html
 function handleCollisions() {
-    game.physics.arcade.collide(spiders, platforms);
+    // game.physics.arcade.collide(hero, platforms);
+    // game.physics.arcade.overlap(hero, coins, onHeroVsCoin,
+        null, this);
+    // ? - Set the collision between spiders and platforms
     // ...
 };
 ```
@@ -882,7 +896,8 @@ function handleCollisions() {
 
 ```html
 function preload() {
-    // ...
+    // game.load.spritesheet('spider', 'images/spider.png', 42, 32);
+    // Add invisible "walls" so the spiders don't fall off platforms
     game.load.image('invisible-wall', 'images/invisible_wall.png');
     // ...
 };
@@ -892,8 +907,8 @@ function preload() {
 
 ```html
 function loadLevel(data) {
-    // ...
-    spiders = game.add.group();
+    // platforms = game.add.group();
+    // spiders = game.add.group();
     enemyWalls = game.add.group();
     // ...
 };
@@ -908,18 +923,18 @@ function spawnPlatform(platform) {
 ```
 ```html
 function spawnEnemyWall(x, y, side){
-	var sprite = enemyWalls.create(x, y, 'invisible-wall');
-	sprite.anchor.set(side === 'left' ? 1 : 0, 1);
-	game.physics.enable(sprite);
-	sprite.body.immovable = true;
-	sprite.body.allowGravity = false;
+    var sprite = enemyWalls.create(x, y, 'invisible-wall');
+    sprite.anchor.set(side === 'left' ? 1 : 0, 1);
+    game.physics.enable(sprite);
+    sprite.body.immovable = true;
+    sprite.body.allowGravity = false;
 }
 ```
 4. We need to resolve collisions against these walls so the spiders can't go through them, right after checking for collisions against platforms…
 ```html
 function handleCollisions() {
-    game.physics.arcade.collide(spiders, platforms);
-    game.physics.arcade.collide(spiders, enemyWalls);
+    // game.physics.arcade.collide(spiders, platforms);
+    // ? - Add collisions between spiders and enemyWalls
     // ...
 };
 ```
@@ -933,7 +948,7 @@ function handleCollisions() {
 function loadLevel(data) {
     // ...
     enemyWalls = game.add.group();
-    enemyWalls.visible = false;
+    // ? - Set the visibility of the enemyWalls to false
     // ...
 };
 ```
@@ -953,7 +968,7 @@ function moveSpider(){
             spider.body.velocity.x = -100; // turn left
         }
         else if (spider.body.touching.left || spider.body.blocked.left) {
-            spider.body.velocity.x = 100; // turn right
+            // ? - Change spiders velocity to turn right
         }
     })
 }
@@ -986,13 +1001,13 @@ As with picking up coins, we will need to merely have a hit test (with overlap) 
 ```html
 function create() {
     // ...
-    sfxStomp = game.add.audio('sfx:stomp');
+    // ? - Add the audio 'sfx:stomp' and set to value of sfxStomp
 };
 ```
 ```html
 function preload() {
     // ...
-    game.load.audio('sfx:stomp', 'audio/stomp.wav');
+    // ? - Load the audio 'sfx:stomp' from 'audio/stomp.wav'
 };
 ```
 2. To do the killing, we need to detect when a spider is touching the main character. We can do this by calling overlap:
@@ -1017,7 +1032,7 @@ function onHeroVsEnemy(hero, enemy) {
 
 ```html
 function onHeroVsEnemy(hero, enemy){
-	if (hero.body.velocity.y > 0) { // kill enemies when hero is falling
+    if (hero.body.velocity.y > 0) { // kill enemies when hero is falling
         hero.body.velocity.y = -200;
         die(enemy);
         sfxStomp.play();
@@ -1048,9 +1063,9 @@ Bouncing on enemies
 function spawnCharacters(data){
 
     data.spiders.forEach(function (spider){
-    	// ...
-	    sprite.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
-	// ...
+        // ...
+        sprite.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
+    // ...
     })
 }
 ```
@@ -1111,7 +1126,7 @@ It's important to know that in order to render a text with a bitmap font, we nee
 var coinPickupCount = 0;
 
 function onHeroVsCoin(hero, coin){
-	coinPickupCount++;
+    coinPickupCount++;
 }
 ```
 
@@ -1122,7 +1137,7 @@ function onHeroVsCoin(hero, coin){
 ```html
 function preload() {
     // ...
-    game.load.image('icon:coin', 'images/coin_icon.png');
+    // ? - load the image 'images/coin_icon.png' and set as 'icon:coin'
     // ...
 };
 ```
@@ -1149,8 +1164,8 @@ Note how all entities inside this.hud will get rendered relatively to it. This m
 
 ```html
 function preload() {
-    // ...
-    game.load.image('font:numbers', 'images/numbers.png');
+    // game.load.image('icon:coin', 'images/coin_icon.png');
+    // ? - load the image 'images/numbers.png' and set as 'font:numbers'
     // ...
 };
 ```
@@ -1159,7 +1174,7 @@ Now we need to instantiate Phaser.RetroFont, that will be able to compute how a 
 ```html
 function create() {
     // ...
-    var NUMBERS_STR = '0123456789X ';
+    // ? - Declare a variable 'NUMBERS_STR' and set its value as string '0123456789X '
     coinFont = game.add.retroFont('font:numbers', 20, 26, NUMBERS_STR, 6);
     // ...
 };
@@ -1282,8 +1297,8 @@ Add this to the move function, since we know the direction in that moment:
 
 ```html
 function move(direction){
-	hero.body.velocity.x = direction * 200;
-	if (hero.body.velocity.x < 0) {
+    hero.body.velocity.x = direction * 200;
+    if (hero.body.velocity.x < 0) {
         hero.scale.x = -1;
     }
     else if (hero.body.velocity.x > 0) {
